@@ -11,14 +11,36 @@ the contributor's reviews with ratings, dates, text, and photo counts.
 
 ## Install
 
+### From npm (recommended)
+
 ```bash
-npm install
+npm install -g maps-contrib
 npx playwright install chromium   # one-time browser download (~115 MB)
+maps-contrib <profile-link-or-id> --reviews 20
 ```
 
-Or reuse a system browser instead: `--browser-channel msedge` (or `chrome`).
+No install at all — run straight from the registry:
+
+```bash
+npx -y maps-contrib@latest <profile-link-or-id> --reviews 20
+```
+
+The browser download is separate from the package and only needed once per
+machine (it lands in Playwright's own cache, not in the package folder).
+Alternatively, skip it and reuse a system browser:
+`--browser-channel msedge` (or `chrome`).
 
 Requires Node.js ≥ 18.
+
+### From source
+
+```bash
+git clone https://github.com/adnxone/maps-contrib.git
+cd maps-contrib
+npm install
+npx playwright install chromium
+node bin/cli.js <profile-link-or-id>
+```
 
 ## Usage
 
@@ -39,8 +61,8 @@ node bin/cli.js <id> --reviews 0 --hl ro
 node bin/cli.js <id> --headed --dump-raw ./raw
 ```
 
-After `npm install`, the `maps-contrib` binary is also available via
-`npx maps-contrib` inside this folder.
+With a global install, replace `node bin/cli.js` with `maps-contrib` in all
+examples above.
 
 ### Options
 
