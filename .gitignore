@@ -1,0 +1,15 @@
+node_modules/
+npm-debug.log*
+*.log
+raw-dumps/
+test-results/
+playwright-report/
+.env
+coverage/
+.nyc_output/
+dist/
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp

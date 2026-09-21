@@ -1,0 +1,43 @@
+{
+  "name": "maps-contrib",
+  "version": "0.1.0",
+  "description": "Fetch structured Google Maps contributor data from a profile link or contributor ID",
+  "license": "MIT",
+  "author": "Adrian Marian Paunescu <adrian@adnxone.eu> (https://adnxone.eu)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adnxone/maps-contrib.git"
+  },
+  "homepage": "https://github.com/adnxone/maps-contrib#readme",
+  "bugs": {
+    "url": "https://github.com/adnxone/maps-contrib/issues"
+  },
+  "keywords": [
+    "google-maps",
+    "local-guide",
+    "contributor",
+    "reviews",
+    "scraping",
+    "playwright",
+    "cli",
+    "json"
+  ],
+  "files": [
+    "bin/",
+    "lib/",
+    "README.md",
+    "LICENSE"
+  ],
+  "bin": {
+    "maps-contrib": "./bin/cli.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "playwright": "^1.63.0"
+  }
+}
