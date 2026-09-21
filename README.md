@@ -29,6 +29,9 @@ node bin/cli.js https://www.google.com/maps/contrib/101748490797307835131
 # bare id, 50 reviews, saved to file
 node bin/cli.js 101748490797307835131 --reviews 50 --out contrib.json
 
+# profile + photos, routed through a proxy
+node bin/cli.js <id> --reviews 0 --photos 30 --proxy http://127.0.0.1:8080
+
 # profile only, Romanian interface
 node bin/cli.js <id> --reviews 0 --hl ro
 
@@ -44,6 +47,8 @@ After `npm install`, the `maps-contrib` binary is also available via
 | Flag | Default | Description |
 |---|---|---|
 | `--reviews <n>` | `20` | Max reviews to collect (`0` = profile only) |
+| `--photos <n>` | `20` | Max photos to collect (`0` = skip) |
+| `--proxy <url>` | — | `http(s)://[user:pass@]host:port` or `socks5://…` |
 | `--hl <locale>` | `en` | Maps interface language |
 | `--timeout <ms>` | `45000` | Navigation/wait timeout |
 | `--headed` | off | Show the browser window |
@@ -74,10 +79,20 @@ After `npm install`, the `maps-contrib` binary is also available via
       "place": "Therme Bucharest",
       "rating": 5,
       "date": "a month ago",
-      "text": "Therme Bucharest is one of the most relaxing places...",
-      "truncated": true,
-      "photos": 8
+      "dateAbsolute": "2026-08-22T07:00:58.697Z",
+      "text": "Therme Bucharest is one of the most relaxing places... (full text)",
+      "truncated": false,
+      "photos": 8,
+      "likes": null,
+      "owner": {
+        "date": "4 months ago",
+        "dateAbsolute": "2026-05-24T07:00:58.697Z",
+        "text": "Thank you very much!..."
+      }
     }
+  ],
+  "photos": [
+    { "url": "https://lh3.googleusercontent.com/gps-cs/...", "place": "Therme Bucharest" }
   ],
   "meta": { "fetchedAt": "2026-09-21T05:54:22.281Z", "reviewsRequested": 5, "reviewsReturned": 5 }
 }
@@ -88,18 +103,21 @@ After `npm install`, the `maps-contrib` binary is also available via
 Google serves contributor pages as an empty boot shell — all data loads
 client-side. So this tool drives headless Chromium (Playwright): dismisses the
 cookie-consent wall ("Reject all"), reads the profile header, opens the Reviews
-tab, and auto-scrolls until it has `--reviews` items or the list is exhausted.
+tab, expands truncated reviews, and auto-scrolls until it has `--reviews` /
+`--photos` items or the list is exhausted. Truncated "More" buttons are clicked
+with raw mouse events — locator clicks hang on them (the matched nodes are
+hidden accessibility copies, and window scrolling navigates the map away).
 
-## Limitations (v0.1)
+## Limitations
 
-- Reviews only — the Photos tab is not collected yet.
-- Dates are Google's relative strings ("a month ago"), not timestamps.
-- Owner responses are included inline in the review text.
-- Long reviews come back truncated with `truncated: true` (Maps only renders
-  the preview until "More" is clicked).
-- Review collection scrolls until Google stops serving more items; very long
-  histories may be cut short by throttling — `meta.reviewsReturned` tells you
-  what you actually got.
+- Dates are Google's relative strings ("a month ago"); `dateAbsolute` is an
+  approximation (month = 30 days, year = 365 days) computed from fetch time.
+- Review like counts are not exposed without login (`likes: null`).
+- Full-text expansion is best-effort — `truncated: true` means the preview is
+  all Maps served.
+- Collection scrolls until Google stops serving more items; very long
+  histories may be cut short by throttling — `meta.reviewsReturned` /
+  `meta.photosReturned` tell you what you actually got.
 - Needs a profile with public reviews; login-walled content is out of scope.
 - Google changes its DOM without notice — if extraction breaks, re-run with
   `--dump-raw` and open an issue with the artifacts.

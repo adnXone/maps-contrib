@@ -6,7 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { parseContribInput, contribUrl } = require('../lib/contrib');
+const { parseContribInput, contribUrl, parseProxy } = require('../lib/contrib');
 const { scrapeContributor } = require('../lib/scrape');
 
 function printHelp() {
@@ -18,6 +18,9 @@ Arguments:
 
 Options:
   --reviews <n>        Max reviews to collect (default: 20, 0 = profile only)
+  --photos <n>         Max photos to collect (default: 20, 0 = skip)
+  --proxy <url>        Route browser traffic through a proxy
+                       (http://host:port, http://user:pass@host:port, socks5://host:port)
   --hl <locale>        Interface language for Google Maps (default: en)
   --timeout <ms>       Navigation/wait timeout (default: 45000)
   --headed             Show the browser window (debug aid)
@@ -30,17 +33,20 @@ Options:
 Examples:
   maps-contrib https://www.google.com/maps/contrib/101748490797307835131
   maps-contrib 101748490797307835131 --reviews 50 --out contrib.json
-  maps-contrib <id> --reviews 0 --dump-raw ./raw`);
+  maps-contrib <id> --reviews 0 --dump-raw ./raw
+  maps-contrib <id> --photos 30 --proxy http://127.0.0.1:8080`);
 }
 
 function parseArgs(argv) {
   const opts = {
     input: null,
     reviews: 20,
+    photos: 20,
     hl: 'en',
     timeoutMs: 45000,
     headed: false,
     channel: undefined,
+    proxy: undefined,
     out: null,
     dumpRaw: null,
   };
@@ -54,6 +60,13 @@ function parseArgs(argv) {
       const v = arg.includes('=') ? arg.slice('--reviews='.length) : takeValue(arg, i++);
       opts.reviews = parseInt(v, 10);
       if (!Number.isInteger(opts.reviews) || opts.reviews < 0) throw new Error(`invalid --reviews: ${v}`);
+    } else if (arg === '--photos' || arg.startsWith('--photos=')) {
+      const v = arg.includes('=') ? arg.slice('--photos='.length) : takeValue(arg, i++);
+      opts.photos = parseInt(v, 10);
+      if (!Number.isInteger(opts.photos) || opts.photos < 0) throw new Error(`invalid --photos: ${v}`);
+    } else if (arg === '--proxy' || arg.startsWith('--proxy=')) {
+      const v = arg.includes('=') ? arg.slice('--proxy='.length) : takeValue(arg, i++);
+      opts.proxy = parseProxy(v); // throws on bad URL/scheme
     } else if (arg === '--hl' || arg.startsWith('--hl=')) {
       opts.hl = arg.includes('=') ? arg.slice('--hl='.length) : takeValue(arg, i++);
     } else if (arg === '--timeout' || arg.startsWith('--timeout=')) {
@@ -114,30 +127,37 @@ async function main() {
 
   let pageRef = null;
   try {
-    const { profile, reviews } = await scrapeContributor({
+    const fetchedAt = new Date().toISOString();
+    const { profile, reviews, photos } = await scrapeContributor({
       id,
       hl: opts.hl,
       maxReviews: opts.reviews,
+      maxPhotos: opts.photos,
       timeoutMs: opts.timeoutMs,
       headed: opts.headed,
       channel: opts.channel,
+      proxy: opts.proxy,
+      fetchedAt,
       hooks: { onPage: (p) => { pageRef = p; } },
     });
     const output = {
       contributor: { id, url: contribUrl(id, opts.hl) },
       profile,
       reviews,
+      photos,
       meta: {
-        fetchedAt: new Date().toISOString(),
+        fetchedAt,
         reviewsRequested: opts.reviews,
         reviewsReturned: reviews.length,
+        photosRequested: opts.photos,
+        photosReturned: photos.length,
       },
     };
     const json = JSON.stringify(output, null, 2);
     if (opts.dumpRaw && pageRef) await dumpRawArtifacts(pageRef, opts.dumpRaw);
     if (opts.out) {
       fs.writeFileSync(opts.out, json + '\n', 'utf8');
-      console.error(`wrote ${opts.out} (${reviews.length} reviews)`);
+      console.error(`wrote ${opts.out} (${reviews.length} reviews, ${photos.length} photos)`);
     } else {
       console.log(json);
     }
