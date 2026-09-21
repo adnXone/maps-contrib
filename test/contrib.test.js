@@ -17,6 +17,7 @@ const {
   toAbsoluteDate,
   splitOwnerResponse,
   parseProxy,
+  parseContributions,
 } = require('../lib/contrib');
 const { parseArgs } = require('../bin/cli');
 
@@ -152,6 +153,29 @@ test('parseProxy accepts http and socks5 with optional auth', () => {
   assert.throws(() => parseProxy('ftp://host:21'), /unsupported.*scheme/);
   assert.throws(() => parseProxy('not a url'), /invalid --proxy/);
   assert.throws(() => parseProxy('http://'), /invalid --proxy/);
+});
+
+test('parseContributions reads the totals dialog', () => {
+  const dlg = [
+    'Contributions from Jane Doe', '11.041 / 15.000 points',
+    'X', 'Reviews', '143',
+    'Y', 'Ratings', '41',
+    'Z', 'Photos', '1,108',
+    'W', 'Videos', '109',
+    'V', 'Q&A', '3',
+    'U', 'Roads added', '0',
+    'Learn more about points',
+  ].join('\n');
+  assert.deepEqual(parseContributions(dlg), {
+    reviews: 143,
+    ratings: 41,
+    photos: 1108,
+    videos: 109,
+    qa: 3,
+    roadsAdded: 0,
+  });
+  assert.deepEqual(parseContributions('nothing useful here'), {});
+  assert.deepEqual(parseContributions(''), {});
 });
 
 test('parseArgs defaults and flags', () => {

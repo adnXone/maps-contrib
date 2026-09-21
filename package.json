@@ -1,6 +1,6 @@
 {
   "name": "maps-contrib",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Fetch structured Google Maps contributor data from a profile link or contributor ID",
   "license": "MIT",
   "author": "Adrian Marian Paunescu <adrian@adnxone.eu> (https://adnxone.eu)",

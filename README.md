@@ -6,8 +6,8 @@
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](./package.json)
 
 Fetch structured Google Maps contributor data from a profile link or a bare
-contributor ID. Outputs JSON: profile header (name, level, points, stats) plus
-the contributor's reviews with ratings, dates, text, and photo counts.
+contributor ID. Outputs JSON: profile header (name, level, points, stats,
+per-category contribution totals) plus the contributor's reviews and photos.
 
 ## Install
 
@@ -94,7 +94,12 @@ examples above.
     "points": 11041,
     "pointsForNextLevel": 15000,
     "avatar": "https://lh3.googleusercontent.com/a-/...",
-    "stats": { "photos": 1179, "views": 31210495 }
+    "stats": { "photos": 1179, "views": 31210495 },
+    "contributions": {
+      "reviews": 143, "ratings": 41, "photos": 1108, "videos": 109,
+      "answers": 1479, "edits": 97, "placesAdded": 20, "qa": 3,
+      "incidentReports": 1
+    }
   },
   "reviews": [
     {
@@ -124,7 +129,9 @@ examples above.
 
 Google serves contributor pages as an empty boot shell — all data loads
 client-side. So this tool drives headless Chromium (Playwright): dismisses the
-cookie-consent wall ("Reject all"), reads the profile header, opens the Reviews
+cookie-consent wall ("Reject all"), reads the profile header, opens the
+per-category totals dialog (reviews, ratings, photos, videos, answers, edits…
+— the only place Google publishes these totals), then opens the Reviews
 tab, expands truncated reviews, and auto-scrolls until it has `--reviews` /
 `--photos` items or the list is exhausted. Truncated "More" buttons are clicked
 with raw mouse events — locator clicks hang on them (the matched nodes are
